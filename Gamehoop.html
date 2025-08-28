@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Bảng điểm thể thao</title>
+  <style>
+    :root {
+      --main-color: #0077cc;
+      --bg-color: #f0f4f8;
+    }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg-color);
+      color: #333;
+      text-align: center;
+      padding: 30px;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+    .mode-toggle, .color-picker {
+      margin: 10px;
+    }
+    .timer {
+      font-size: 36px;
+      margin: 20px 0;
+      color: var(--main-color);
+    }
+    .timer-controls button {
+      padding: 8px 16px;
+      margin: 5px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background-color: var(--main-color);
+      color: white;
+      cursor: pointer;
+    }
+    .team-section {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .team {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 250px;
+      position: relative;
+    }
+    .server-dot {
+      width: 12px;
+      height: 12px;
+      background-color: green;
+      border-radius: 50%;
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      visibility: hidden;
+    }
+    .team input {
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      border: none;
+      background: transparent;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    .score {
+      font-size: 48px;
+      color: var(--main-color);
+      margin-bottom: 10px;
+    }
+    .controls button {
+      padding: 8px 16px;
+      margin: 5px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background-color: var(--main-color);
+      color: white;
+      cursor: pointer;
+    }
+    .global-controls {
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Bảng điểm thể thao 🎯</h1>
+
+  <div class="mode-toggle">
+    <label>Chế độ:</label>
+    <select id="gameMode" onchange="updateMode()">
+      <option value="pickleball">Pickleball</option>
+      <option value="basketball">Bóng rổ</option>
+    </select>
+  </div>
+
+  <div class="color-picker">
+    <label>Chọn màu chủ đạo:</label>
+    <input type="color" id="colorInput" value="#0077cc" onchange="changeColor()">
+  </div>
+
+  <div class="timer" id="timerDisplay">12:00</div>
+  <div class="timer-controls">
+    <button onclick="startTimer()">▶️ Bắt đầu</button>
+    <button onclick="pauseTimer()">⏸️ Tạm dừng</button>
+    <button onclick="resetTimer()">🔄 Reset</button>
+  </div>
+
+  <div class="team-section">
+    <div class="team" id="teamA">
+      <div class="server-dot" id="dotA"></div>
+      <input type="text" id="teamAName" value="Đội A">
+      <div class="score" id="scoreA">0</div>
+      <div class="controls">
+        <button onclick="changeScore('A', 1)">+1</button>
+        <button onclick="changeScore('A', -1)">–1</button>
+      </div>
+    </div>
+
+    <div class="team" id="teamB">
+      <div class="server-dot" id="dotB"></div>
+      <input type="text" id="teamBName" value="Đội B">
+      <div class="score" id="scoreB">0</div>
+      <div class="controls">
+        <button onclick="changeScore('B', 1)">+1</button>
+        <button onclick="changeScore('B', -1)">–1</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="global-controls">
+    <button onclick="switchServer()">🔄 Chuyển lượt giao</button>
+    <button onclick="resetScores()">🧹 Reset điểm</button>
+  </div>
+
+  <script>
+    let scoreA = 0;
+    let scoreB = 0;
+    let server = 'A';
+    let timer;
+    let timeLeft = 12 * 60; // 12 phút mặc định cho bóng rổ
+    let running = false;
+
+    function updateDisplay() {
+      document.getElementById('scoreA').textContent = scoreA;
+      document.getElementById('scoreB').textContent = scoreB;
+      document.getElementById('dotA').style.visibility = server === 'A' ? 'visible' : 'hidden';
+      document.getElementById('dotB').style.visibility = server === 'B' ? 'visible' : 'hidden';
+    }
+
+    function changeScore(team, value) {
+      if (team === 'A') scoreA = Math.max(0, scoreA + value);
+      else scoreB = Math.max(0, scoreB + value);
+      updateDisplay();
+    }
+
+    function switchServer() {
+      server = server === 'A' ? 'B' : 'A';
+      updateDisplay();
+    }
+
+    function resetScores() {
+      scoreA = 0;
+      scoreB = 0;
+      updateDisplay();
+    }
+
+    function updateTimerDisplay() {
+      let min = Math.floor(timeLeft / 60);
+      let sec = timeLeft % 60;
+      document.getElementById('timerDisplay').textContent =
+        `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+      if (running) return;
+      running = true;
+      timer = setInterval(() => {
+        if (timeLeft > 0) {
+          timeLeft--;
+          updateTimerDisplay();
+        } else {
+          clearInterval(timer);
+          running = false;
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      clearInterval(timer);
+      running = false;
+    }
+
+    function resetTimer() {
+      const mode = document.getElementById('gameMode').value;
+      timeLeft = mode === 'basketball' ? 12 * 60 : 0;
+      pauseTimer();
+      updateTimerDisplay();
+    }
+
+    function updateMode() {
+      resetTimer();
+    }
+
+    function changeColor() {
+      const color = document.getElementById('colorInput').value;
+      document.documentElement.style.setProperty('--main-color', color);
+    }
+
+    updateDisplay();
+    updateTimerDisplay();
+  </script>
+
+</body>
+</html>
